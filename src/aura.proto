@@ -17,6 +17,7 @@ message EmotionCandidate {
   float valence = 3;
   float arousal = 4;
   float confidence = 5;
+  string text = 6;
 }
 
 message FusedEmotionState {
@@ -24,6 +25,7 @@ message FusedEmotionState {
   float confidence = 2;
   float valence = 3;
   float arousal = 4;
+  string description = 5;
 }
 
 message ContextualPrompt {
@@ -54,4 +56,5 @@ service AuraService {
 
 service AuraPerception {
   rpc SendFacePerception (EmotionCandidate) returns (EmpathyResponse);
+  rpc SendVoicePerception (EmotionCandidate) returns (EmpathyResponse);
 }

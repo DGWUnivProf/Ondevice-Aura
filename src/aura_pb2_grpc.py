@@ -111,6 +111,11 @@ class AuraPerceptionStub(object):
                 request_serializer=aura__pb2.EmotionCandidate.SerializeToString,
                 response_deserializer=aura__pb2.EmpathyResponse.FromString,
                 _registered_method=True)
+        self.SendVoicePerception = channel.unary_unary(
+                '/aura.AuraPerception/SendVoicePerception',
+                request_serializer=aura__pb2.EmotionCandidate.SerializeToString,
+                response_deserializer=aura__pb2.EmpathyResponse.FromString,
+                _registered_method=True)
 
 
 class AuraPerceptionServicer(object):
@@ -122,11 +127,22 @@ class AuraPerceptionServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendVoicePerception(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AuraPerceptionServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendFacePerception': grpc.unary_unary_rpc_method_handler(
                     servicer.SendFacePerception,
+                    request_deserializer=aura__pb2.EmotionCandidate.FromString,
+                    response_serializer=aura__pb2.EmpathyResponse.SerializeToString,
+            ),
+            'SendVoicePerception': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendVoicePerception,
                     request_deserializer=aura__pb2.EmotionCandidate.FromString,
                     response_serializer=aura__pb2.EmpathyResponse.SerializeToString,
             ),
@@ -156,6 +172,33 @@ class AuraPerception(object):
             request,
             target,
             '/aura.AuraPerception/SendFacePerception',
+            aura__pb2.EmotionCandidate.SerializeToString,
+            aura__pb2.EmpathyResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendVoicePerception(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/aura.AuraPerception/SendVoicePerception',
             aura__pb2.EmotionCandidate.SerializeToString,
             aura__pb2.EmpathyResponse.FromString,
             options,
