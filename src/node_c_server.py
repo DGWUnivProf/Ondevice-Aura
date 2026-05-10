@@ -20,6 +20,18 @@ class AuraPerceptionServicer(aura_pb2_grpc.AuraPerceptionServicer):
         self.threshold = 0.08      # 변화량 임계치 (민감도 상향)
         self.min_interval = 0.5    # 최소 전송 간격 (0.5초)
         self.max_interval = 5.0    # 강제 전송 간격 (5초 동안 변화 없어도 현재 상태 유지 위해 전송)
+        
+        # 백그라운드 처리를 위한 스레드 풀 생성
+        self.executor = futures.ThreadPoolExecutor(max_workers=5)
+
+    def _bg_send_to_node_b(self, prompt_request):
+        """백그라운드에서 Node B로 데이터를 전송하는 헬퍼 함수"""
+        try:
+            print(f"  [Async] Node B({NODE_B_ADDRESS})로 데이터 전송 중...")
+            send_with_safety(prompt_request)
+            print(f"  [Async] Node B 전송 완료!")
+        except Exception as e:
+            print(f"  [Async] 전송 중 오류 발생: {e}")
 
     def is_significant_change(self, v, a):
         now = time.time()
@@ -81,10 +93,14 @@ class AuraPerceptionServicer(aura_pb2_grpc.AuraPerceptionServicer):
             fused_emotion=fused_emotion
         )
         
-        print(f"  -> 분석 완료! Node B({NODE_B_ADDRESS})로 데이터 전송 중...")
-        response = send_with_safety(prompt_request)
-        print(f"  -> Node B 응답 수신 완료!")
-        return response
+        # Node B로 보내는 작업은 백그라운드에서 실행 (Node A를 기다리게 하지 않음)
+        self.executor.submit(self._bg_send_to_node_b, prompt_request)
+        
+        return aura_pb2.EmpathyResponse(
+            session_id="session_live",
+            text="분석 및 전송 시작 (비동기)",
+            strategy="async_queued"
+        )
 
     def SendVoicePerception(self, request, context):
         print(f"\n[Node C Server] 수신된 음성 데이터: {request.text} (V:{request.valence:.2f}, A:{request.arousal:.2f})")
@@ -111,10 +127,14 @@ class AuraPerceptionServicer(aura_pb2_grpc.AuraPerceptionServicer):
             fused_emotion=fused_emotion
         )
         
-        print(f"  -> 분석 완료! Node B({NODE_B_ADDRESS})로 데이터 전송 중...")
-        response = send_with_safety(prompt_request)
-        print(f"  -> Node B 응답 수신 완료!")
-        return response
+        # 백그라운드 전송 실행
+        self.executor.submit(self._bg_send_to_node_b, prompt_request)
+        
+        return aura_pb2.EmpathyResponse(
+            session_id="session_voice",
+            text="분석 및 전송 시작 (비동기)",
+            strategy="async_queued"
+        )
 
 import socket
 
