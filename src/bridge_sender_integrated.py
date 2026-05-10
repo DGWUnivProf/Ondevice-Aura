@@ -15,7 +15,7 @@ import aura_pb2_grpc
 # =====================================================
 # 설정
 # =====================================================
-NODE_B_ADDRESS = "localhost:50051"
+NODE_B_ADDRESS = "192.168.0.37:5051"
 GRPC_TIMEOUT = 35
 MAX_RETRY = 2
 
@@ -69,14 +69,21 @@ You are Aura, an empathetic AI companion.
 # =====================================================
 # 2. 통합 분석 및 gRPC 요청 조립 (Node C -> Node B)
 # =====================================================
+# 성능 최적화: 모델과 DB 연결을 매번 하지 않도록 전역 객체로 관리합니다.
+_node_c_instance = None
+
+def get_node_c():
+    global _node_c_instance
+    if _node_c_instance is None:
+        log_event("Node C", "INIT", "NodeC 엔진 초기화 중 (모델 로드 포함)...")
+        _node_c_instance = NodeC()
+    return _node_c_instance
+
 def process_and_build_request(session_id, user_text, nonverbal_vector, candidates, fused_emotion):
     request_id = f"turn_{uuid.uuid4().hex[:8]}"
-
-    # --- [우리가 만든 Node C 분석 파이프라인 가동] ---
-    node_c = NodeC()
-    log_event("Node C", request_id, "NodeC 분석 시작 (Neo4j 검색 및 정렬도 검사)")
+    node_c = get_node_c()
     
-    # Node C의 process_data 호출 (텍스트와 비언어 벡터만 전달)
+    log_event("Node C", request_id, "분석 시작")
     node_c_result = node_c.process_data(user_text, nonverbal_vector)
     
     kg_context_str = "\n".join(node_c_result["kg_context"])
