@@ -78,3 +78,5 @@ VAD_THRESHOLD: 음성 감지 민감도 (추천: 0.05 ~ 0.2)
 SILENCE_DURATION: 문장 종료로 판단할 침묵 시간 (초)
 
 MY_TTS_SERVER_PORT: Node B로부터 답변을 받을 포트 번호 (기본값: 5050)
+
+![구동 스크린샷](node_a2/a.png)
